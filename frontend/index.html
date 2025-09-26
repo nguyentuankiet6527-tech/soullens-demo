@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SoulLens — Demo Frontend Nâng Cao</title>
+  <style>
+    :root{
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #6c5ce7;
+      --danger: #ff6b6b;
+      --success: #16a34a;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 6px 18px rgba(15,23,42,0.06);
+      --radius: 12px;
+      --taskbar-w: 240px;
+      --transition: 200ms ease;
+      --topbar-h: 50px;
+    }
+    .dark {
+      --bg: #0b1220;
+      --card: #0f1724;
+      --text: #e6eef8;
+      --muted: #9fb0d4;
+      --accent: #7c5cff;
+      --glass: rgba(255,255,255,0.03);
+      --shadow: 0 6px 18px rgba(0,0,0,0.6);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{background:linear-gradient(180deg,var(--bg),#e9eefb);color:var(--text);transition:background var(--transition), color var(--transition);}
+
+    /* Top bar */
+    .topbar-global{
+      position:fixed;
+      top:0; left:0; right:0;
+      height:var(--topbar-h);
+      background:var(--accent);
+      color:white;
+      display:flex;
+      align-items:center;
+      padding:0 16px;
+      font-weight:700;
+      font-size:1.1rem;
+      z-index:1000;
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Layout */
+    .app { display:flex; height:100vh; gap:18px; padding-top:var(--topbar-h); transition: filter var(--transition); }
+
+    /* Taskbar */
+    .taskbar{
+      width:var(--taskbar-w);
+      min-width:var(--taskbar-w);
+      background:linear-gradient(180deg,var(--card),rgba(255,255,255,0.98));
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      transition:transform var(--transition), opacity var(--transition);
+    }
+    .taskbar.hidden { transform: translateX(-120%); opacity:0; pointer-events:none; }
+    .taskbar .logo { font-weight:700; font-size:1.1rem; display:flex; gap:8px; align-items:center }
+    .taskbar .menu { display:flex; flex-direction:column; gap:8px; margin-top:6px }
+    .taskbar .menu button { background:transparent;border:0;padding:10px;border-radius:10px; text-align:left; cursor:pointer; color:var(--text); }
+    .taskbar .menu button:hover { background:var(--glass); }
+    .taskbar .profile { display:flex; gap:10px; align-items:center; padding:6px; border-radius:10px; }
+    .avatar { width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#42a5f5); display:flex; align-items:center; justify-content:center; color:white; font-weight:700; }
+
+    /* Main content */
+    .main { flex:1; display:flex; flex-direction:column; gap:14px; }
+
+    .topbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+
+    .controls{ display:flex; gap:12px; align-items:center; }
+
+    .card{ background:var(--card); padding:12px; border-radius:12px; box-shadow:var(--shadow); transition:transform var(--transition); }
+
+    .workspace{ display:flex; gap:14px; height: calc(100vh - var(--topbar-h) - 50px); }
+
+    .leftcol{ flex:1; display:flex; flex-direction:column; gap:12px; }
+
+    .rightcol{ width:360px; min-width:240px; max-width:420px; display:flex; flex-direction:column; gap:12px; }
+
+    /* Chat box */
+    .chat{ display:flex; flex-direction:column; gap:10px; flex:1; min-height:200px; padding:12px; overflow:hidden; }
+    .messages{ flex:1; overflow:auto; padding-right:6px; display:flex; flex-direction:column; gap:8px; }
+    .msg{ max-width:78%; padding:10px 12px; border-radius:12px; background:linear-gradient(180deg,#eef2ff,#fff); color:var(--text); align-self:flex-start; }
+    .msg.you{ background:linear-gradient(180deg,#def7ec,#e6fff5); align-self:flex-end; }
+    .chat-input{ display:flex; gap:8px; align-items:center; padding-top:6px; }
+    .chat-input input[type="text"]{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); background:transparent; color:var(--text); }
+    .chat-input button{ padding:10px 14px; border-radius:10px; background:var(--accent); color:white; border:0; cursor:pointer; }
+
+    /* Upload cards */
+    .uploader{ display:flex; gap:12px; flex-direction:column; }
+    .uploader .row{ display:flex; gap:12px; align-items:center; }
+    .preview{ border-radius:10px; overflow:hidden; width:160px; height:120px; background:#1111; display:flex; align-items:center; justify-content:center; color:var(--muted); border:1px dashed rgba(0,0,0,0.06); }
+    .small{ font-size:0.9rem; color:var(--muted); }
+
+    /* Right result panel */
+    .result{ display:flex; flex-direction:column; gap:10px; }
+    .emotion-card{ display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px; flex-wrap:wrap; }
+    .emotion-icon{ width:64px; height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:28px; }
+    .history{ display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:48vh; padding:6px; }
+
+    .muted{ color:var(--muted); font-size:0.95rem; }
+    .row-between{ display:flex; justify-content:space-between; align-items:center; }
+    .btn-ghost{ border:0; background:transparent; cursor:pointer; padding:8px; border-radius:8px; }
+    .toggle{ display:flex; gap:8px; align-items:center; }
+    .hidden-small{ display:none; }
+
+    /* Author */
+    .author{ font-size:0.75rem; text-align:center; color:var(--muted); margin-top:6px; }
+
+    /* responsiveness */
+    @media (max-width: 920px){
+      .taskbar{ display:none; }
+      .workspace{ flex-direction:column; height:auto; }
+      .rightcol{ width:100%; min-width:unset; max-width:unset; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar-global">Demo SoulLens</div>
+  <div id="root" class="app">
+    <!-- Taskbar -->
+    <aside id="taskbar" class="taskbar card">
+      <div class="logo"> <div class="avatar">SL</div> <div>SoulLens</div></div>
+      <div class="profile">
+        <div style="flex:1">
+          <div style="font-weight:700">Nguyễn Tuấn Kiệt</div>
+          <div class="muted" style="font-size:0.85rem">Student</div>
+        </div>
+        <button id="taskToggleBtn" class="btn-ghost" title="Ẩn thanh tác vụ">✖</button>
+      </div>
+
+      <div class="menu">
+        <button onclick="showToast('Xem tài khoản')">🧾 Xem tài khoản</button>
+        <button onclick="showToast('Cài đặt')">⚙️ Cài đặt</button>
+        <button onclick="showToast('Nâng cấp VIP')">⭐ Nâng cấp VIP</button>
+        <button onclick="toggleDemoMode()">🎭 Chế độ demo</button>
+      </div>
+
+      <div style="margin-top:auto" class="small muted">Phiên bản demo • SoulLens</div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="topbar">
+        <div style="display:flex;gap:12px;align-items:center">
+          <button id="openTaskBtn" class="btn-ghost" title="Mở thanh tác vụ">☰</button>
+          <h2 style="margin:0">SoulLens — Demo</h2>
+          <div class="muted" style="font-size:0.9rem">Phiên bản: demo</div>
+        </div>
+
+        <div class="controls">
+          <label class="toggle muted">Độ sáng
+            <input id="brightness" type="range" min="70" max="130" value="100" style="margin-left:8px">
+          </label>
+
+          <button id="themeBtn" class="btn-ghost" title="Chuyển tối/sáng">🌙</button>
+          <button id="openHistory" class="btn-ghost" title="Lịch sử phân tích">📋</button>
+        </div>
+      </div>
+
+      <div class="workspace">
+        <div class="leftcol">
+          <!-- Chat card -->
+          <section class="card chat" aria-label="Chat và giao tiếp">
+            <div class="row-between">
+              <div><strong>Chat với SoulLens</strong><div class="muted small">Nhập tin nhắn để ứng dụng thử phân tích tâm trạng (demo)</div></div>
+              <div class="muted small" id="chatStatus">Status: Ready</div>
+            </div>
+
+            <div id="messages" class="messages" aria-live="polite"></div>
+
+            <div class="chat-input">
+              <input id="chatInput" type="text" placeholder="Gõ tin nhắn rồi Enter..." aria-label="Tin nhắn"/>
+              <button id="sendChat">Gửi</button>
+            </div>
+          </section>
+
+          <!-- Uploaders -->
+          <section class="card uploader" aria-label="Tải ảnh và âm thanh">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>Upload & Phân tích</strong><div class="muted small">Ảnh / Audio để SoulLens phân tích cảm xúc</div></div>
+            </div>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <!-- Image -->
+              <div style="flex:1;min-width:260px">
+                <div class="small muted">Ảnh (camera hoặc file)</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                  <div id="imgPreview" class="preview">Chưa có ảnh</div>
+                  <div style="flex:1">
+                    <input id="imgInput" type="file" accept="image/*" />
+                    <div style="margin-top:8px;display:flex;gap:8px">
+                      <button id="analyzeImgBtn">Analyze Image</button>
+                      <button id="clearImgBtn" class="btn-ghost">Clear</button>
+                    </div>
+                    <div id="imgResult" class="muted small" style="margin-top:6px"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Audio -->
+              <div style="flex:1;min-width:260px">
+                <div class="small muted">Âm thanh (voice note)</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                  <div style="flex:1">
+                    <input id="audioInput" type="file" accept="audio/*" />
+                    <audio id="audioPlayer" controls style="width:100%;margin-top:8px;display:none"></audio>
+                    <div style="margin-top:8px;display:flex;gap:8px">
+                      <button id="analyzeAudioBtn">Analyze Audio</button>
+                      <button id="clearAudioBtn" class="btn-ghost">Clear</button>
+                    </div>
+                    <div id="audioResult" class="muted small" style="margin-top:6px"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="rightcol">
+          <section class="card result">
+            <div class="row-between">
+              <div><strong>Kết quả phân tích</strong><div class="muted small">Hiển thị kết quả gần nhất</div></div>
+              <div><button id="clearHistory" class="btn-ghost">Xóa</button></div>
+            </div>
+
+            <div id="lastResult" class="emotion-card">
+              <!-- Emoji sẽ hiển thị nhiều cùng lúc -->
+            </div>
+
+            <div style="border-top:1px dashed rgba(0,0,0,0.06); padding-top:8px;">
+              <strong>Lịch sử</strong>
+              <div id="history" class="history"></div>
+            </div>
+          </section>
+
+          <section class="card">
+            <strong>Gợi ý hành động</strong>
+            <div id="actionTips" class="muted small" style="margin-top:8px"></div>
+          </section>
+
+          <div class="author">Nguyễn Tuấn Kiệt</div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" style="position:fixed;right:18px;bottom:18px;padding:12px 16px;border-radius:10px;background:var(--card);box-shadow:var(--shadow);display:none"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
